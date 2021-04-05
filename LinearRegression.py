@@ -2,8 +2,8 @@ import numpy as np
 
 class LinearRegression:
     def __init__(self, learning_rate = 0.01, iterations = 10000):
-        self.learning_rate = 0.01
-        self.iterations = 10000
+        self.learning_rate = learning_rate
+        self.iterations = iterations
 
     def predict(self, X):
         return X.dot(self.w) + self.b
