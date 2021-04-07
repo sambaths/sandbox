@@ -1,5 +1,9 @@
 import numpy as np
 
+def mean_squared_error(y_true, y_pred):
+    return np.mean((y_true - y_pred)**2)
+
+
 class LinearRegression:
     def __init__(self, learning_rate = 0.01, iterations = 10000):
         self.learning_rate = learning_rate
@@ -38,12 +42,14 @@ class LinearRegression:
         return self.w, self.b
     
 if __name__ == "__main__":
-    X = np.random.rand(100, 5)
-    real_weights = [1,2,3,4,5]
-    real_bias = 20
-    y =  np.dot(real_weights, X.T) + real_bias
-    regression = LinearRegression()
-    w, b = regression.fit(X, y)
-    print('Actual: ', real_weights, real_bias)
-    print('Trained: ', np.round(w,  2), round(b, 2))
+    from sklearn.model_selection import train_test_split
+    from sklearn import datasets
+    X, y = datasets.make_regression(n_samples=100, n_features=1, noise=20, random_state=4)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1234)
 
+    regressor = LinearRegression()
+    regressor.fit(X_train, y_train)
+    predictions = regressor.predict(X_test)
+        
+    mse = mean_squared_error(y_test, predictions)
+    print("MSE:", mse)
