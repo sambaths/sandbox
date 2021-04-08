@@ -1,8 +1,5 @@
 import numpy as np
-
-def mean_squared_error(y_true, y_pred):
-    return np.mean((y_true - y_pred)**2)
-
+from metrics import mean_squared_error
 
 class LinearRegression:
     def __init__(self, learning_rate = 0.01, iterations = 10000):
