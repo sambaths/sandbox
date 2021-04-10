@@ -9,4 +9,3 @@ def mean_squared_error(y_true, y_pred):
 def euclidean_distance(x1, x2):
     return np.sqrt(np.sum(x1 - x2)**2)
 
-
