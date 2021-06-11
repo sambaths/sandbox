@@ -130,5 +130,9 @@ dmypy.json
 
 
 # 
-*.csv
+*.csv 
 .vscode/
+nn/
+*.ipynb
+*.pkl
+*.gz
