@@ -2,7 +2,7 @@ import numpy as np
 from numpy import ndarray
 from typing import List
 
-from base import Operation, WeightMultiply, BiasAdd
+from base import Operation, WeightMultiply, BiasAdd, Conv2D_Op
 from utils import assert_same_shape, permute_data
 from activations import Sigmoid
 from base import ParamOperation
@@ -43,6 +43,7 @@ class Layer(object):
         self.input_ = input_
 
         for operation in self.operations:
+            # print(operation)
             input_ = operation.forward(input_, inference)
 
         self.output = input_
@@ -66,6 +67,24 @@ class Layer(object):
 
         return input_grad
 
+    def _param_grads(self):
+        '''
+        Extracts a _param_grads from a layers operations
+        '''
+        self.param_grads = []
+        for operation in self.operations:
+            if issubclass(operation.__class__, ParamOperation):
+                self.param_grads.append(operation.param_grad)
+
+    def _params(self):
+        '''
+        Extracts the _params from a layer's operations.
+        '''
+
+        self.params = []
+        for operation in self.operations:
+            if issubclass(operation.__class__, ParamOperation):
+                self.params.append(operation.param)
 
 class Dense(Layer):
     '''
@@ -109,25 +128,6 @@ class Dense(Layer):
 
         return None
 
-    
-    def _param_grads(self) -> ndarray:
-        '''
-        Extracts a _param_grads from a layers operations
-        '''
-        self.param_grads = []
-        for operation in self.operations:
-            if issubclass(operation.__class__, ParamOperation):
-                self.param_grads.append(operation.param_grad)
-
-    def _params(self) -> ndarray:
-        '''
-        Extracts the _params from a layer's operations.
-        '''
-
-        self.params = []
-        for operation in self.operations:
-            if issubclass(operation.__class__, ParamOperation):
-                self.params.append(operation.param)
 
 
 class Dropout(Operation):
@@ -148,3 +148,60 @@ class Dropout(Operation):
 
     def _input_grad(self, output_grad: ndarray) -> ndarray:
         return output_grad * self.mask
+
+
+class Flatten(Operation):
+    '''
+    Flatten layer
+    '''
+    def __init__(self):
+        super().__init__()
+
+    def _output(self, inference: bool) -> ndarray:
+        return self._input.reshape(self._input.shape[0], -1)
+
+    def _input_grad(self, output_grad: ndarray) -> ndarray:
+        return output_grad.reshape(self._input.shape)
+
+
+class Conv2D(Layer):
+    '''
+    Convolutional Layer
+    '''
+    def __init__(self, out_channels: int, 
+                        param_size: int, 
+                        dropout: float = 1.0,
+                        weight_init: str = 'normal',
+                        activation: Operation = Sigmoid(), 
+                        flatten: bool = False):
+        super().__init__(out_channels)
+        self.out_channels = out_channels
+        self.param_size = param_size
+        self.activation = activation
+        self.flatten = flatten
+        self.dropout = dropout
+        self.weight_init = weight_init
+
+    def _setup_layer(self, input_: ndarray) -> ndarray:
+        
+        self.params = []
+        in_channels = input_.shape[1]
+
+        if self.weight_init == 'glorot':
+            scale = 2 / (in_channels + self.out_channels)
+        else:
+            scale = 1.0
+        
+        conv_param = np.random.normal(loc = 0, scale=scale, 
+                                    size=(in_channels, self.out_channels, self.param_size, self.param_size))
+        self.params.append(conv_param)
+
+        self.operations = []
+        self.operations.append(Conv2D_Op(conv_param))
+        self.operations.append(self.activation)
+        if self.flatten:
+            self.operations.append(Flatten())
+
+        if self.dropout < 1.0:
+            self.operations.append(Dropout(self.dropout))
+        return None

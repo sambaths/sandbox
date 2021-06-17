@@ -136,3 +136,4 @@ nn/
 *.ipynb
 *.pkl
 *.gz
+NeuralNetwork/test.py

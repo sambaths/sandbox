@@ -32,3 +32,11 @@ def one_hot_encode(y: ndarray, n_classes: int) -> ndarray:
     '''
     res = np.eye(n_classes)[np.array(y).reshape(-1)]
     return res.reshape(list(y.shape)+[n_classes])
+
+def assert_dim(t: ndarray,
+               dim: ndarray):
+    assert len(t.shape) == dim, \
+    '''
+    Tensor expected to have dimension {0}, instead has dimension {1}
+    '''.format(dim, len(t.shape))
+    return None

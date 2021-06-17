@@ -1,7 +1,7 @@
 from copy import deepcopy
 from numpy import ndarray
 import numpy as np
-
+from tqdm import tqdm
 from typing import List, Tuple
 
 from utils import assert_same_shape, permute_data
@@ -27,7 +27,7 @@ class NeuralNetwork(object):
         '''
         x_out = x_batch
         for layer in self.layers:
-            x_out = layer.forward(x_out)
+            x_out = layer.forward(x_out, inference)
 
         return x_out
 
@@ -97,14 +97,19 @@ class Trainer(object):
             for layer in self.net.layers:
                 layer.first = True
             self.best_loss = 1e9
+        
+        
         for epoch in range(epochs):
+            
             if (epoch + 1) % eval_every == 0:
                 # for early stopping 
                 last_model = deepcopy(self.net)
 
             X_train, y_train = permute_data(X_train, y_train)
             batch_generator = self.generate_batches(X_train, y_train, batch_size)
-            for i, (X_batch, y_batch) in enumerate(batch_generator):
+            pbar = tqdm(enumerate(batch_generator) ,total = len(list(batch_generator)))
+            for i, (X_batch, y_batch) in pbar:
+                pbar.set_postfix({"Epoch": epoch+1, "Batch": i+1})
                 self.net.train_batch(X_batch, y_batch)
                 self.optim.step()
 
